@@ -1295,6 +1295,9 @@ void loadTextures() {
   // Load Desert Wasteland textures
   println("Loading Desert Wasteland textures...");
   wallTexturesDesert = new PImage[10];
+  // Index 1 is required for out-of-bounds raycasts (even though map has no walls)
+  wallTexturesDesert[1] = loadImageSafe("desert_rock.png");
+  if (wallTexturesDesert[1] == null) wallTexturesDesert[1] = createDesertRockTexture(texSize);
   wallTexturesDesert[8] = loadImageSafe("desert_border.png");
   if (wallTexturesDesert[8] == null) wallTexturesDesert[8] = createDesertBorderTexture(texSize);
   floorTextureDesert = loadImageSafe("desert_sand.png");
@@ -2465,6 +2468,23 @@ PImage createDesertSandTexture(int texSize) {
   return tex;
 }
 
+PImage createDesertRockTexture(int texSize) {
+  // Sandy rock/sandstone texture for out-of-bounds walls
+  PImage tex = createImage(texSize, texSize, RGB);
+  tex.loadPixels();
+  for (int y = 0; y < texSize; y++) {
+    for (int x = 0; x < texSize; x++) {
+      float noise = random(0.85, 1.15);
+      int r = int(180 * noise);
+      int g = int(150 * noise);
+      int b = int(110 * noise);
+      tex.pixels[y * texSize + x] = color(r, g, b);
+    }
+  }
+  tex.updatePixels();
+  return tex;
+}
+
 PImage createDesertBorderTexture(int texSize) {
   // Slightly darker sand for distant border
   PImage tex = createImage(texSize, texSize, RGB);
@@ -2878,6 +2898,12 @@ void renderPlayer(Player p, int startX, int startY, int w, int h) {
     if (hit != null && hit.wallType != 9) { // Skip rendering invisible barriers (tile 9)
       float distance = hit.distance * cos(rayAngle - p.angle);
       float wallHeight = (tileSize * h) / distance;
+
+      // Safety check: ensure texture exists for this wall type
+      if (hit.wallType >= wallTextures.length || wallTextures[hit.wallType] == null) {
+        rayAngle += rayStep;
+        continue;
+      }
 
       PImage tex = wallTextures[hit.wallType];
       int texSize = tex.width;
