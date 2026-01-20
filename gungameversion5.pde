@@ -35,6 +35,7 @@ SoundFile[] gameMusic = new SoundFile[5];
 SoundFile cargoMusic; // Dedicated cargo map music
 SoundFile forestMusic; // Dedicated forest map music
 SoundFile beachMusic; // Dedicated beach map music
+SoundFile desertMusic; // Dedicated desert map music
 int currentTrack = -1;
 boolean musicLoaded = false;
 
@@ -56,12 +57,13 @@ Player player2;
 
 // Map selection
 int currentMapIndex = 0;
-String[] mapNames = {"Classic Cargo", "Forest Clearing", "Sunset Beach"};
-int numMaps = 3;
+String[] mapNames = {"Classic Cargo", "Forest Clearing", "Sunset Beach", "Desert Wasteland"};
+int numMaps = 4;
 
 // Map
 int mapSize = 16;
 int mapSizeBeach = 36; // Beach map is larger (16x36)
+int mapSizeDesert = 36; // Desert map is also larger (16x36)
 int tileSize = 50;
 int[][] currentMap;
 
@@ -150,6 +152,49 @@ int[][] mapSunsetBeach = {
   {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}  // Row 35 - Bottom wall
 };
 
+// Desert Wasteland map (16x36 - same layout as beach)
+// 8=desert border (passable, renders as distant sand, like ocean water)
+// No formal walls - map edges are open desert stretching to horizon
+// Desert map uses sprite-based obstacles like beach map
+int[][] mapDesertWasteland = {
+  {8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8}, // Row 0 - North border (distant desert)
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 1
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 2
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 3
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 4
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 5
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 6
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 7
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 8
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 9
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 10
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 11
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 12
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 13
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 14
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 15
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 16
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 17
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 18
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 19
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 20
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 21
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 22
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 23
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 24
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 25
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 26
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 27
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 28
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 29
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 30
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 31
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 32
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 33
+  {8,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8}, // Row 34
+  {8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8}  // Row 35 - South border (distant desert)
+};
+
 // Reference to active map (will point to one of the above)
 int[][] map;
 
@@ -169,6 +214,14 @@ PImage[] wallTexturesBeach;
 PImage floorTextureBeach;
 PImage skyboxTextureBeach;
 PImage shorelineTexture;
+
+// Textures - Desert
+PImage[] wallTexturesDesert;
+PImage floorTextureDesert;
+PImage skyboxTextureDesert;
+PImage skyboxTextureFallout; // Grey fallout sky after bomb
+PImage desertBorderTexture; // Distant desert floor (like ocean in beach)
+PImage mountainsSprite; // Mountains on horizon
 
 // Active textures (point to current map's textures)
 PImage[] wallTextures;
@@ -215,6 +268,23 @@ PImage palmTreeSprite;
 PImage palmTreeSprite2;
 PImage beachUmbrellaSprite;
 PImage sailboatSprite;
+
+// Desert obstacles (sprite-based for desert map)
+ArrayList<BeachObstacle> desertObstacles = new ArrayList<BeachObstacle>();
+PImage desertObstacle1Sprite;
+PImage desertObstacle2Sprite;
+PImage desertObstacle3Sprite;
+
+// Atomic bomb feature (desert map only)
+boolean atomicBombEnabled = false;
+int atomicBombTriggerKills = 0;
+boolean atomicBombTriggered = false;
+int atomicBombTriggerTime = 0;
+int atomicBombFlashTime = 10000; // 10 second delay
+float atomicBombFlashAlpha = 0;
+boolean atomicBombDetonated = false;
+PImage mushroomCloudSprite;
+SoundFile atomicDetonationSound;
 
 // Spawn points for random respawning (grid coordinates)
 int[][] spawnPoints = {
@@ -302,6 +372,27 @@ void selectMap(int mapIndex) {
       player2.y = 850;
       player2.angle = -3*PI/4;
     }
+  } else if (mapIndex == 3) {
+    // Desert Wasteland (16x36 map)
+    map = mapDesertWasteland;
+    currentMap = mapDesertWasteland;
+    wallTextures = wallTexturesDesert;
+    floorTexture = floorTextureDesert;
+    skyboxTexture = skyboxTextureDesert;
+    initializeDesertObstacles();
+    initializeAtomicBomb();
+    // Reset player positions for 16x36 desert map
+    // Map is 800 wide x 1800 tall
+    if (player1 != null) {
+      player1.x = 100;
+      player1.y = 100;
+      player1.angle = PI/4;
+    }
+    if (player2 != null) {
+      player2.x = 650;
+      player2.y = 850;
+      player2.angle = -3*PI/4;
+    }
   }
 }
 
@@ -318,6 +409,36 @@ void initializeBeachObstacles() {
   // Add beach umbrellas - spaced throughout the beach
   beachObstacles.add(new BeachObstacle(450, 400, 15, beachUmbrellaSprite, "umbrella"));
   beachObstacles.add(new BeachObstacle(350, 800, 15, beachUmbrellaSprite, "umbrella"));
+}
+
+void initializeDesertObstacles() {
+  desertObstacles.clear();
+
+  // Add desert obstacles - spaced across desert area (16x36 map: X: 50-700, Y: 50-1750)
+  desertObstacles.add(new BeachObstacle(200, 300, 25, desertObstacle1Sprite, "obstacle1"));
+  desertObstacles.add(new BeachObstacle(500, 400, 25, desertObstacle2Sprite, "obstacle2"));
+  desertObstacles.add(new BeachObstacle(350, 600, 25, desertObstacle3Sprite, "obstacle3"));
+  desertObstacles.add(new BeachObstacle(150, 900, 25, desertObstacle1Sprite, "obstacle1"));
+  desertObstacles.add(new BeachObstacle(600, 1100, 25, desertObstacle2Sprite, "obstacle2"));
+  desertObstacles.add(new BeachObstacle(300, 1300, 25, desertObstacle3Sprite, "obstacle3"));
+  desertObstacles.add(new BeachObstacle(550, 1500, 25, desertObstacle1Sprite, "obstacle1"));
+}
+
+void initializeAtomicBomb() {
+  atomicBombTriggered = false;
+  atomicBombDetonated = false;
+  atomicBombFlashAlpha = 0;
+  atomicBombTriggerTime = 0;
+
+  // Calculate trigger kill count based on killsToWin
+  // Only enable if killsToWin > 1
+  if (killsToWin > 1) {
+    atomicBombEnabled = true;
+    // Random kill count between 1 and (killsToWin - 1)
+    atomicBombTriggerKills = int(random(1, killsToWin));
+  } else {
+    atomicBombEnabled = false;
+  }
 }
 
 void draw() {
@@ -457,9 +578,39 @@ void draw() {
     triggerEndScreen(player2);
   }
   
+  // Handle atomic bomb flash and detonation (desert map only)
+  if (atomicBombTriggered && currentMapIndex == 3) {
+    int timeSinceTrigger = millis() - atomicBombTriggerTime;
+
+    if (timeSinceTrigger >= atomicBombFlashTime && !atomicBombDetonated) {
+      // Initial white flash
+      atomicBombDetonated = true;
+      atomicBombFlashAlpha = 255;
+      skyboxTexture = skyboxTextureFallout; // Change to fallout grey sky
+
+      // Play detonation sound
+      if (soundsLoaded && atomicDetonationSound != null) {
+        atomicDetonationSound.play();
+      }
+    }
+
+    if (atomicBombDetonated && atomicBombFlashAlpha > 0) {
+      // Fade out the white flash over 3 seconds
+      atomicBombFlashAlpha -= 255.0 / (3.0 * 60.0); // Assuming 60 FPS
+      if (atomicBombFlashAlpha < 0) atomicBombFlashAlpha = 0;
+    }
+  }
+
   renderPlayer(player1, 0, 0, width/2, height);
   renderPlayer(player2, width/2, 0, width/2, height);
-  
+
+  // Render white flash overlay for atomic bomb
+  if (atomicBombFlashAlpha > 0 && currentMapIndex == 3) {
+    fill(255, 255, 255, atomicBombFlashAlpha);
+    noStroke();
+    rect(0, 0, width, height);
+  }
+
   stroke(255);
   strokeWeight(4);
   line(width/2, 0, width/2, height);
@@ -778,6 +929,9 @@ void triggerEndScreen(Player winningPlayer) {
     if (beachMusic != null && beachMusic.isPlaying()) {
       try { beachMusic.stop(); } catch (Exception e) {}
     }
+    if (desertMusic != null && desertMusic.isPlaying()) {
+      try { desertMusic.stop(); } catch (Exception e) {}
+    }
   }
 }
 
@@ -871,6 +1025,7 @@ void loadSounds() {
     healthPickupSound = loadSoundSafe("health_pickup.wav");
     emptyGunSound = loadSoundSafe("empty_gun.wav");
     reloadSound = loadSoundSafe("reload.wav");
+    atomicDetonationSound = loadSoundSafe("Atomic_detonation.wav");
     if (shootSound != null || player1HitSound1 != null || player1HitSound2 != null ||
         player2HitSound1 != null || player2HitSound2 != null ||
         player1DeathSound != null || player2DeathSound != null ||
@@ -925,6 +1080,13 @@ void loadMusic() {
       println("Beach music loaded");
       loadedTracks++;
     }
+
+    desertMusic = loadSoundSafe("desert_music.wav");
+    if (desertMusic == null) desertMusic = loadSoundSafe("desert_music.mp3");
+    if (desertMusic != null) {
+      println("Desert music loaded");
+      loadedTracks++;
+    }
     if (menuMusic != null || loadedTracks > 0) {
       musicLoaded = true;
       println("Music system loaded successfully (" + loadedTracks + " game tracks)");
@@ -952,6 +1114,9 @@ void playRandomGameTrack() {
   }
   if (beachMusic != null && beachMusic.isPlaying()) {
     try { beachMusic.stop(); } catch (Exception e) {}
+  }
+  if (desertMusic != null && desertMusic.isPlaying()) {
+    try { desertMusic.stop(); } catch (Exception e) {}
   }
 
   // Play map-specific music if available
@@ -991,6 +1156,19 @@ void playRandomGameTrack() {
       return;
     } catch (Exception e) {
       println("Error playing beach music");
+    }
+  }
+
+  // Desert map (index 3)
+  if (currentMapIndex == 3 && desertMusic != null) {
+    try {
+      desertMusic.amp(0.3);
+      desertMusic.loop();
+      println("Now playing: Desert Music");
+      currentTrack = -1; // Not using standard track
+      return;
+    } catch (Exception e) {
+      println("Error playing desert music");
     }
   }
 
@@ -1101,6 +1279,32 @@ void loadTextures() {
   if (beachUmbrellaSprite == null) beachUmbrellaSprite = createBeachUmbrellaSprite();
   sailboatSprite = loadImageSafe("sailboat.png");
   if (sailboatSprite == null) sailboatSprite = createSailboatSprite();
+
+  // Load Desert Wasteland textures
+  println("Loading Desert Wasteland textures...");
+  wallTexturesDesert = new PImage[10];
+  wallTexturesDesert[8] = loadImageSafe("desert_border.png");
+  if (wallTexturesDesert[8] == null) wallTexturesDesert[8] = createDesertBorderTexture(texSize);
+  floorTextureDesert = loadImageSafe("desert_sand.png");
+  if (floorTextureDesert == null) floorTextureDesert = createDesertSandTexture(texSize);
+  skyboxTextureDesert = loadImageSafe("desert_skybox.png");
+  if (skyboxTextureDesert == null) skyboxTextureDesert = createDesertSkyboxTexture();
+  skyboxTextureFallout = loadImageSafe("fallout_skybox.png");
+  if (skyboxTextureFallout == null) skyboxTextureFallout = createFalloutSkyboxTexture();
+  desertBorderTexture = loadImageSafe("desert_border_floor.png");
+  if (desertBorderTexture == null) desertBorderTexture = createDesertBorderFloorTexture(texSize);
+  mountainsSprite = loadImageSafe("mountains.png");
+  if (mountainsSprite == null) mountainsSprite = createMountainsSprite();
+
+  // Desert obstacle sprites
+  desertObstacle1Sprite = loadImageSafe("desert_obstacle1.png");
+  if (desertObstacle1Sprite == null) desertObstacle1Sprite = createDesertObstacle1Sprite();
+  desertObstacle2Sprite = loadImageSafe("desert_obstacle2.png");
+  if (desertObstacle2Sprite == null) desertObstacle2Sprite = createDesertObstacle2Sprite();
+  desertObstacle3Sprite = loadImageSafe("desert_obstacle3.png");
+  if (desertObstacle3Sprite == null) desertObstacle3Sprite = createDesertObstacle3Sprite();
+  mushroomCloudSprite = loadImageSafe("mushroom_cloud.png");
+  if (mushroomCloudSprite == null) mushroomCloudSprite = createMushroomCloudSprite();
 
   // Ceiling texture (shared)
   ceilingTexture = loadImageSafe("ceiling.png");
@@ -2232,6 +2436,256 @@ PImage createSailboatSprite() {
   return sprite;
 }
 
+// Desert texture creation functions
+PImage createDesertSandTexture(int texSize) {
+  PImage tex = createImage(texSize, texSize, RGB);
+  tex.loadPixels();
+  for (int y = 0; y < texSize; y++) {
+    for (int x = 0; x < texSize; x++) {
+      float noise = random(0.9, 1.1);
+      int r = int(210 * noise);
+      int g = int(180 * noise);
+      int b = int(120 * noise);
+      tex.pixels[y * texSize + x] = color(r, g, b);
+    }
+  }
+  tex.updatePixels();
+  return tex;
+}
+
+PImage createDesertBorderTexture(int texSize) {
+  // Slightly darker sand for distant border
+  PImage tex = createImage(texSize, texSize, RGB);
+  tex.loadPixels();
+  for (int y = 0; y < texSize; y++) {
+    for (int x = 0; x < texSize; x++) {
+      float noise = random(0.85, 1.05);
+      int r = int(190 * noise);
+      int g = int(160 * noise);
+      int b = int(100 * noise);
+      tex.pixels[y * texSize + x] = color(r, g, b);
+    }
+  }
+  tex.updatePixels();
+  return tex;
+}
+
+PImage createDesertBorderFloorTexture(int texSize) {
+  return createDesertBorderTexture(texSize);
+}
+
+PImage createDesertSkyboxTexture() {
+  int w = 2048;
+  int h = 512;
+  PImage sky = createImage(w, h, RGB);
+  sky.loadPixels();
+  for (int y = 0; y < h; y++) {
+    float t = (float)y / h;
+    int topR = 135, topG = 206, topB = 235; // Sky blue
+    int botR = 200, botG = 220, botB = 255; // Light blue
+    int r = int(lerp(topR, botR, t));
+    int g = int(lerp(topG, botG, t));
+    int b = int(lerp(topB, botB, t));
+    for (int x = 0; x < w; x++) {
+      sky.pixels[y * w + x] = color(r, g, b);
+    }
+  }
+  // Add some clouds
+  for (int i = 0; i < 30; i++) {
+    int cx = int(random(w));
+    int cy = int(random(h * 0.3, h * 0.7));
+    int cw = int(random(60, 120));
+    int ch = int(random(20, 40));
+    for (int y = max(0, cy - ch/2); y < min(h, cy + ch/2); y++) {
+      for (int x = max(0, cx - cw/2); x < min(w, cx + cw/2); x++) {
+        float dx = x - cx;
+        float dy = y - cy;
+        float dist = sqrt(dx*dx + dy*dy);
+        if (dist < cw/2) {
+          float alpha = map(dist, 0, cw/2, 0.6, 0);
+          color current = sky.pixels[y * w + x];
+          int r = int(lerp(red(current), 255, alpha));
+          int g = int(lerp(green(current), 255, alpha));
+          int b = int(lerp(blue(current), 255, alpha));
+          sky.pixels[y * w + x] = color(r, g, b);
+        }
+      }
+    }
+  }
+  sky.updatePixels();
+  return sky;
+}
+
+PImage createFalloutSkyboxTexture() {
+  int w = 2048;
+  int h = 512;
+  PImage sky = createImage(w, h, RGB);
+  sky.loadPixels();
+  for (int y = 0; y < h; y++) {
+    float t = (float)y / h;
+    int topR = 100, topG = 100, topB = 100; // Grey
+    int botR = 120, botG = 120, botB = 120; // Lighter grey
+    int r = int(lerp(topR, botR, t));
+    int g = int(lerp(topG, botG, t));
+    int b = int(lerp(topB, botB, t));
+    for (int x = 0; x < w; x++) {
+      sky.pixels[y * w + x] = color(r, g, b);
+    }
+  }
+  sky.updatePixels();
+  return sky;
+}
+
+PImage createMountainsSprite() {
+  int w = 1200;
+  int h = 300;
+  PImage sprite = createImage(w, h, ARGB);
+  sprite.loadPixels();
+  // Create mountain silhouette
+  for (int x = 0; x < w; x++) {
+    float peakHeight = h * 0.6 * (0.5 + 0.5 * sin(x * 0.01)) * (0.7 + 0.3 * sin(x * 0.03));
+    int mountainTop = int(h - peakHeight);
+    for (int y = 0; y < h; y++) {
+      if (y >= mountainTop) {
+        sprite.pixels[y * w + x] = color(60, 50, 40, 200);
+      } else {
+        sprite.pixels[y * w + x] = color(0, 0, 0, 0);
+      }
+    }
+  }
+  sprite.updatePixels();
+  return sprite;
+}
+
+PImage createDesertObstacle1Sprite() {
+  // Rock/boulder
+  int w = 100;
+  int h = 120;
+  PImage sprite = createImage(w, h, ARGB);
+  sprite.loadPixels();
+  int centerX = w / 2;
+  int centerY = h - 30;
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      float dx = x - centerX;
+      float dy = y - centerY;
+      float dist = sqrt(dx*dx + dy*dy);
+      if (dist < 40) {
+        float noise = random(0.8, 1.1);
+        int r = int(130 * noise);
+        int g = int(110 * noise);
+        int b = int(90 * noise);
+        sprite.pixels[y * w + x] = color(r, g, b, 255);
+      } else {
+        sprite.pixels[y * w + x] = color(0, 0, 0, 0);
+      }
+    }
+  }
+  sprite.updatePixels();
+  return sprite;
+}
+
+PImage createDesertObstacle2Sprite() {
+  // Cactus
+  int w = 80;
+  int h = 150;
+  PImage sprite = createImage(w, h, ARGB);
+  sprite.loadPixels();
+  int centerX = w / 2;
+  // Main trunk
+  for (int y = h - 100; y < h; y++) {
+    for (int x = centerX - 10; x < centerX + 10; x++) {
+      if (x >= 0 && x < w) {
+        sprite.pixels[y * w + x] = color(80, 120, 60, 255);
+      }
+    }
+  }
+  // Left arm
+  for (int y = h - 70; y < h - 40; y++) {
+    for (int x = centerX - 30; x < centerX - 10; x++) {
+      if (x >= 0 && x < w) {
+        sprite.pixels[y * w + x] = color(80, 120, 60, 255);
+      }
+    }
+  }
+  // Right arm
+  for (int y = h - 60; y < h - 30; y++) {
+    for (int x = centerX + 10; x < centerX + 30; x++) {
+      if (x >= 0 && x < w) {
+        sprite.pixels[y * w + x] = color(80, 120, 60, 255);
+      }
+    }
+  }
+  sprite.updatePixels();
+  return sprite;
+}
+
+PImage createDesertObstacle3Sprite() {
+  // Dead tree/shrub
+  int w = 90;
+  int h = 130;
+  PImage sprite = createImage(w, h, ARGB);
+  sprite.loadPixels();
+  int centerX = w / 2;
+  // Trunk
+  for (int y = h - 80; y < h; y++) {
+    for (int x = centerX - 8; x < centerX + 8; x++) {
+      if (x >= 0 && x < w) {
+        sprite.pixels[y * w + x] = color(90, 70, 50, 255);
+      }
+    }
+  }
+  // Branches
+  for (int i = 0; i < 5; i++) {
+    int branchY = int(random(h - 70, h - 20));
+    int branchLength = int(random(15, 30));
+    int direction = random(1) > 0.5 ? 1 : -1;
+    for (int j = 0; j < branchLength; j++) {
+      int bx = centerX + direction * j;
+      int by = branchY - j / 3;
+      if (bx >= 0 && bx < w && by >= 0 && by < h) {
+        sprite.pixels[by * w + bx] = color(90, 70, 50, 255);
+      }
+    }
+  }
+  sprite.updatePixels();
+  return sprite;
+}
+
+PImage createMushroomCloudSprite() {
+  int w = 400;
+  int h = 500;
+  PImage sprite = createImage(w, h, ARGB);
+  sprite.loadPixels();
+  int centerX = w / 2;
+  // Mushroom cap (top)
+  int capCenterY = int(h * 0.25);
+  int capRadius = 150;
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      float dx = x - centerX;
+      float dy = y - capCenterY;
+      float dist = sqrt(dx*dx + dy*dy);
+      if (dist < capRadius) {
+        float alpha = map(dist, 0, capRadius, 255, 0);
+        sprite.pixels[y * w + x] = color(80, 60, 50, int(alpha));
+      }
+    }
+  }
+  // Stem
+  int stemWidth = 80;
+  for (int y = int(h * 0.25); y < int(h * 0.8); y++) {
+    int stemW = int(map(y, h * 0.25, h * 0.8, stemWidth, stemWidth * 1.5));
+    for (int x = centerX - stemW/2; x < centerX + stemW/2; x++) {
+      if (x >= 0 && x < w && y >= 0 && y < h) {
+        sprite.pixels[y * w + x] = color(70, 55, 45, 220);
+      }
+    }
+  }
+  sprite.updatePixels();
+  return sprite;
+}
+
 // Blood effect spawning functions
 void spawnBloodSpray(float x, float y, float bulletAngle, int count) {
   for (int i = 0; i < count; i++) {
@@ -2430,6 +2884,16 @@ void renderPlayer(Player p, int startX, int startY, int w, int h) {
     }
   }
 
+  // Add desert obstacles
+  if (currentMapIndex == 3) {
+    for (BeachObstacle obs : desertObstacles) {
+      float dx = obs.x - p.x;
+      float dy = obs.y - p.y;
+      float distance = sqrt(dx*dx + dy*dy);
+      spritesToRender.add(new SpriteDepth(distance, "obstacle", obs));
+    }
+  }
+
   // Add other player
   Player other = (p == player1) ? player2 : player1;
   float otherDx = other.x - p.x;
@@ -2475,6 +2939,16 @@ void renderPlayer(Player p, int startX, int startY, int w, int h) {
     spritesToRender.add(new SpriteDepth(maxDepth * 10, "sailboat", p));
   }
 
+  // Add mountains (desert map only) - render far behind everything
+  if (currentMapIndex == 3) {
+    spritesToRender.add(new SpriteDepth(maxDepth * 15, "mountains", p));
+  }
+
+  // Add mushroom cloud (desert map only, after detonation) - render in front of mountains
+  if (currentMapIndex == 3 && atomicBombDetonated) {
+    spritesToRender.add(new SpriteDepth(maxDepth * 12, "mushroomcloud", p));
+  }
+
   // Sort sprites by distance (farthest first) and render
   Collections.sort(spritesToRender);
 
@@ -2514,6 +2988,10 @@ void renderPlayer(Player p, int startX, int startY, int w, int h) {
       }
     } else if (sd.type.equals("sailboat")) {
       drawSailboat((Player)sd.data, w, h);
+    } else if (sd.type.equals("mountains")) {
+      drawMountains((Player)sd.data, w, h);
+    } else if (sd.type.equals("mushroomcloud")) {
+      drawMushroomCloud((Player)sd.data, w, h);
     }
   }
   
@@ -2570,6 +3048,9 @@ void drawFloorWithTextures(Player p, int w, int h) {
         } else if (tileType == 7 && shorelineTexture != null) {
           // Shoreline tile - use shoreline texture
           tex = shorelineTexture;
+        } else if (tileType == 8 && desertBorderTexture != null) {
+          // Desert border - distant sand texture
+          tex = desertBorderTexture;
         } else if (tileType == 9 && currentMapIndex == 2) {
           // Beach map - ocean/invisible barrier shows as ocean water
           tex = shorelineTexture;
@@ -2607,6 +3088,9 @@ void drawFloorWithTextures(Player p, int w, int h) {
         } else if (currentMapIndex == 2) {
           // Beach map - extend ocean infinitely in all directions
           fill(30 * 0.5, 120 * 0.5, 180 * 0.5); // Ocean blue (darkened)
+        } else if (currentMapIndex == 3) {
+          // Desert map - extend desert sand infinitely in all directions
+          fill(120 * 0.5, 100 * 0.5, 60 * 0.5); // Desert sand (darkened)
         } else {
           fill(45 * 0.5, 65 * 0.5, 35 * 0.5); // Forest grass (darkened)
         }
@@ -3103,6 +3587,74 @@ void drawSailboat(Player viewer, int w, int h) {
   }
 }
 
+void drawMountains(Player viewer, int w, int h) {
+  // Mountains appear on the horizon in the desert map
+  // They wrap around 360 degrees on the distant horizon
+  if (mountainsSprite == null) return;
+
+  // Draw mountains as a panoramic background
+  // Cover the entire horizontal FOV
+  float spriteHeight = h * 0.25; // Mountains are 25% of screen height
+  float spriteWidth = (mountainsSprite.width * spriteHeight) / mountainsSprite.height;
+
+  // Position mountains at horizon line
+  float horizonY = h / 2 - spriteHeight;
+
+  // Faded atmospheric appearance
+  float brightness = 0.6;
+  float alpha = 150;
+
+  pushMatrix();
+  translate(w/2, horizonY);
+  tint(255 * brightness, alpha);
+  imageMode(CENTER);
+  image(mountainsSprite, 0, 0, w, spriteHeight);
+  noTint();
+  imageMode(CORNER);
+  popMatrix();
+}
+
+void drawMushroomCloud(Player viewer, int w, int h) {
+  // Mushroom cloud appears on the horizon after atomic bomb detonation
+  if (mushroomCloudSprite == null) return;
+
+  // Position cloud in a fixed direction (south)
+  float cloudDirection = PI / 2; // 90 degrees (south)
+
+  float angleDiff = cloudDirection - viewer.angle;
+  while (angleDiff > PI) angleDiff -= TWO_PI;
+  while (angleDiff < -PI) angleDiff += TWO_PI;
+
+  if (abs(angleDiff) < fov/2 + 0.5) {
+    float screenX = w/2 + (angleDiff / (fov/2)) * (w/2);
+
+    // Large mushroom cloud on distant horizon
+    float spriteHeight = h * 0.4; // 40% of screen height
+    float spriteWidth = (mushroomCloudSprite.width * spriteHeight) / mushroomCloudSprite.height;
+
+    // Check if sprite is within viewport bounds (prevent bleed to other player's screen)
+    if (screenX - spriteWidth/2 < 0 || screenX + spriteWidth/2 > w) {
+      return; // Sprite would extend outside viewport
+    }
+
+    // Position mushroom cloud at horizon line
+    float horizonY = h / 2 - spriteHeight / 2;
+
+    // Slightly faded appearance
+    float brightness = 0.8;
+    float alpha = 220;
+
+    pushMatrix();
+    translate(screenX, horizonY);
+    tint(255 * brightness, alpha);
+    imageMode(CENTER);
+    image(mushroomCloudSprite, 0, 0, spriteWidth, spriteHeight);
+    noTint();
+    imageMode(CORNER);
+    popMatrix();
+  }
+}
+
 RayHit castRay(float x, float y, float angle) {
   float rayDirX = cos(angle);
   float rayDirY = sin(angle);
@@ -3124,8 +3676,8 @@ RayHit castRay(float x, float y, float angle) {
       return new RayHit(dist, 1, false, 0);
     }
     int tile = map[gridY][gridX];
-    // Creek (5) and shoreline (7) are passable, ocean (9) is not
-    if (tile != 0 && tile != 5 && tile != 7) {
+    // Creek (5), shoreline (7), and desert border (8) are passable
+    if (tile != 0 && tile != 5 && tile != 7 && tile != 8) {
       boolean horizontal = abs((rayY % tileSize) - tileSize/2) < abs((rayX % tileSize) - tileSize/2);
       float textureX = horizontal ? (rayX % tileSize) / tileSize : (rayY % tileSize) / tileSize;
       return new RayHit(dist, tile, horizontal, textureX);
@@ -3166,6 +3718,15 @@ void checkPlayerHits() {
           b.owner.kills++;
           spawnBloodPool(target.x, target.y);
 
+          // Check for atomic bomb trigger (desert map only)
+          if (atomicBombEnabled && !atomicBombTriggered && currentMapIndex == 3) {
+            int totalKills = player1.kills + player2.kills;
+            if (totalKills >= atomicBombTriggerKills) {
+              atomicBombTriggered = true;
+              atomicBombTriggerTime = millis();
+            }
+          }
+
           // Play player-specific death sound
           if (soundsLoaded) {
             if (target == player1 && player1DeathSound != null) {
@@ -3204,19 +3765,30 @@ boolean checkCollisionWithRadius(float x, float y, float radius) {
 
   if (gridX < 0 || gridX >= currentMapWidth || gridY < 0 || gridY >= currentMapHeight) return true;
   int tile = map[gridY][gridX];
-  if (tile != 0 && tile != 5 && tile != 7) return true; // Creek (5) and shoreline (7) are passable, ocean (9) is not
+  // Creek (5), shoreline (7), and desert border (8) are passable
+  if (tile != 0 && tile != 5 && tile != 7 && tile != 8) return true;
   float[][] testPoints = {{x + radius, y}, {x - radius, y}, {x, y + radius}, {x, y - radius}};
   for (float[] point : testPoints) {
     int gx = int(point[0] / tileSize);
     int gy = int(point[1] / tileSize);
     if (gx < 0 || gx >= currentMapWidth || gy < 0 || gy >= currentMapHeight) return true;
     int t = map[gy][gx];
-    if (t != 0 && t != 5 && t != 7) return true; // Creek (5) and shoreline (7) are passable, ocean (9) is not
+    // Creek (5), shoreline (7), and desert border (8) are passable
+    if (t != 0 && t != 5 && t != 7 && t != 8) return true;
   }
 
   // Check beach obstacle collisions
   if (currentMapIndex == 2) {
     for (BeachObstacle obs : beachObstacles) {
+      if (obs.collidesWith(x, y, radius)) {
+        return true;
+      }
+    }
+  }
+
+  // Check desert obstacle collisions
+  if (currentMapIndex == 3) {
+    for (BeachObstacle obs : desertObstacles) {
       if (obs.collidesWith(x, y, radius)) {
         return true;
       }
@@ -3288,6 +3860,18 @@ void keyPressed() {
       player2.lastHitMarker = 0;
       player2.pistolAmmo = player2.pistolMaxAmmo;
       player2.reloading = false;
+
+      // Reset atomic bomb state (desert map)
+      atomicBombTriggered = false;
+      atomicBombDetonated = false;
+      atomicBombFlashAlpha = 0;
+      atomicBombTriggerTime = 0;
+
+      // Reset skybox to normal for desert map
+      if (currentMapIndex == 3) {
+        skyboxTexture = skyboxTextureDesert;
+      }
+
       bullets.clear();
       weaponPickups.clear();
       healthKits.clear();
@@ -3579,6 +4163,18 @@ class Bullet {
     // Check collision with beach obstacles
     if (currentMapIndex == 2) {
       for (BeachObstacle obs : beachObstacles) {
+        float dx = x - obs.x;
+        float dy = y - obs.y;
+        float distance = sqrt(dx*dx + dy*dy);
+        if (distance < obs.radius) {
+          dead = true;
+          break;
+        }
+      }
+    }
+    // Check collision with desert obstacles
+    if (currentMapIndex == 3) {
+      for (BeachObstacle obs : desertObstacles) {
         float dx = x - obs.x;
         float dy = y - obs.y;
         float distance = sqrt(dx*dx + dy*dy);
