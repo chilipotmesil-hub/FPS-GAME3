@@ -2563,6 +2563,12 @@ PImage createDesertObstacle1Sprite() {
   int h = 120;
   PImage sprite = createImage(w, h, ARGB);
   sprite.loadPixels();
+
+  // Initialize all pixels to transparent
+  for (int i = 0; i < sprite.pixels.length; i++) {
+    sprite.pixels[i] = color(0, 0, 0, 0);
+  }
+
   int centerX = w / 2;
   int centerY = h - 30;
   for (int y = 0; y < h; y++) {
@@ -2576,8 +2582,6 @@ PImage createDesertObstacle1Sprite() {
         int g = int(110 * noise);
         int b = int(90 * noise);
         sprite.pixels[y * w + x] = color(r, g, b, 255);
-      } else {
-        sprite.pixels[y * w + x] = color(0, 0, 0, 0);
       }
     }
   }
@@ -2591,6 +2595,12 @@ PImage createDesertObstacle2Sprite() {
   int h = 150;
   PImage sprite = createImage(w, h, ARGB);
   sprite.loadPixels();
+
+  // Initialize all pixels to transparent
+  for (int i = 0; i < sprite.pixels.length; i++) {
+    sprite.pixels[i] = color(0, 0, 0, 0);
+  }
+
   int centerX = w / 2;
   // Main trunk
   for (int y = h - 100; y < h; y++) {
@@ -2626,6 +2636,12 @@ PImage createDesertObstacle3Sprite() {
   int h = 130;
   PImage sprite = createImage(w, h, ARGB);
   sprite.loadPixels();
+
+  // Initialize all pixels to transparent
+  for (int i = 0; i < sprite.pixels.length; i++) {
+    sprite.pixels[i] = color(0, 0, 0, 0);
+  }
+
   int centerX = w / 2;
   // Trunk
   for (int y = h - 80; y < h; y++) {
@@ -2657,6 +2673,12 @@ PImage createMushroomCloudSprite() {
   int h = 500;
   PImage sprite = createImage(w, h, ARGB);
   sprite.loadPixels();
+
+  // Initialize all pixels to transparent
+  for (int i = 0; i < sprite.pixels.length; i++) {
+    sprite.pixels[i] = color(0, 0, 0, 0);
+  }
+
   int centerX = w / 2;
   // Mushroom cap (top)
   int capCenterY = int(h * 0.25);
@@ -3508,6 +3530,9 @@ void drawBloodOverlay(Player p, int w, int h) {
 }
 
 void drawBeachObstacle(Player viewer, BeachObstacle obs, int w, int h) {
+  // Safety check - skip if sprite is null
+  if (obs == null || obs.sprite == null) return;
+
   float dx = obs.x - viewer.x;
   float dy = obs.y - viewer.y;
   float distance = sqrt(dx*dx + dy*dy);
