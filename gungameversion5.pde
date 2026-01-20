@@ -2600,7 +2600,53 @@ PImage createFalloutSkyboxTexture() {
     }
   }
 
-  // Add same mountains but darker for fallout atmosphere
+  // Add mushroom cloud in south direction (behind mountains)
+  // South is at PI/2, which is 1/4 of the way through the 360-degree panorama
+  int cloudCenterX = w / 4; // South direction in panoramic skybox
+  int cloudCenterY = int(h * 0.65); // Lower in skybox (on horizon)
+  int cloudWidth = 180;
+  int cloudHeight = 220;
+
+  // Draw mushroom cap (top of cloud)
+  int capCenterY = cloudCenterY - cloudHeight / 3;
+  int capRadius = cloudWidth / 2;
+  for (int y = 0; y < h; y++) {
+    for (int x = 0; x < w; x++) {
+      float dx = x - cloudCenterX;
+      float dy = y - capCenterY;
+      float dist = sqrt(dx*dx + dy*dy);
+      if (dist < capRadius) {
+        float cloudAlpha = map(dist, 0, capRadius, 0.7, 0.0);
+        if (cloudAlpha > 0) {
+          color current = sky.pixels[y * w + x];
+          int r = int(lerp(red(current), 90, cloudAlpha));
+          int g = int(lerp(green(current), 80, cloudAlpha));
+          int b = int(lerp(blue(current), 70, cloudAlpha));
+          sky.pixels[y * w + x] = color(r, g, b);
+        }
+      }
+    }
+  }
+
+  // Draw mushroom stem
+  int stemWidth = cloudWidth / 3;
+  int stemTop = cloudCenterY - cloudHeight / 3;
+  int stemBottom = cloudCenterY + cloudHeight / 4;
+  for (int y = stemTop; y < stemBottom && y < h; y++) {
+    int stemW = int(map(y, stemTop, stemBottom, stemWidth * 0.8, stemWidth * 1.2));
+    for (int x = cloudCenterX - stemW/2; x < cloudCenterX + stemW/2; x++) {
+      if (x >= 0 && x < w && y >= 0 && y < h) {
+        float cloudAlpha = 0.6;
+        color current = sky.pixels[y * w + x];
+        int r = int(lerp(red(current), 85, cloudAlpha));
+        int g = int(lerp(green(current), 75, cloudAlpha));
+        int b = int(lerp(blue(current), 65, cloudAlpha));
+        sky.pixels[y * w + x] = color(r, g, b);
+      }
+    }
+  }
+
+  // Add same mountains but darker for fallout atmosphere (these render in FRONT of cloud)
   for (int x = 0; x < w; x++) {
     float mountainHeight = 0;
     mountainHeight += noise(x * 0.002) * 100;
@@ -3057,11 +3103,6 @@ void renderPlayer(Player p, int startX, int startY, int w, int h) {
     spritesToRender.add(new SpriteDepth(maxDepth * 10, "sailboat", p));
   }
 
-  // Add mushroom cloud (desert map only, after detonation) - render far behind walls like sailboat
-  if (currentMapIndex == 3 && atomicBombDetonated) {
-    spritesToRender.add(new SpriteDepth(maxDepth * 10, "mushroomcloud", p));
-  }
-
   // Sort sprites by distance (farthest first) and render
   Collections.sort(spritesToRender);
 
@@ -3101,8 +3142,6 @@ void renderPlayer(Player p, int startX, int startY, int w, int h) {
       }
     } else if (sd.type.equals("sailboat")) {
       drawSailboat((Player)sd.data, w, h);
-    } else if (sd.type.equals("mushroomcloud")) {
-      drawMushroomCloud((Player)sd.data, w, h);
     }
   }
   
@@ -3741,52 +3780,6 @@ void drawMountains(Player viewer, int w, int h) {
   imageMode(CORNER);
   popStyle();
   popMatrix();
-}
-
-void drawMushroomCloud(Player viewer, int w, int h) {
-  // Mushroom cloud appears on the horizon after atomic bomb detonation
-  // Positioned like sailboat - in a fixed direction on the horizon
-  if (mushroomCloudSprite == null) return;
-
-  // Safety check for sprite dimensions
-  if (mushroomCloudSprite.width <= 0 || mushroomCloudSprite.height <= 0) return;
-
-  // Position cloud in a fixed direction (south, same as sailboat)
-  float cloudDirection = PI / 2; // 90 degrees (south, toward map edge)
-
-  float angleDiff = cloudDirection - viewer.angle;
-  while (angleDiff > PI) angleDiff -= TWO_PI;
-  while (angleDiff < -PI) angleDiff += TWO_PI;
-
-  // Only render if cloud is in view (slightly wider FOV than normal)
-  if (abs(angleDiff) < fov/2 + 0.3) {
-    float screenX = w/2 + (angleDiff / (fov/2)) * (w/2);
-
-    // Large mushroom cloud on distant horizon - fixed size
-    float spriteHeight = h * 0.35; // 35% of screen height
-    float spriteWidth = (mushroomCloudSprite.width * spriteHeight) / mushroomCloudSprite.height;
-
-    // Check if sprite is within viewport bounds (prevent bleed to other player's screen)
-    if (screenX - spriteWidth/2 < 0 || screenX + spriteWidth/2 > w) {
-      return; // Sprite would extend outside viewport
-    }
-
-    // Position mushroom cloud on horizon line (moved up slightly)
-    float horizonY = h / 2 - spriteHeight / 2 - spriteHeight * 0.1;
-
-    // Slightly faded atmospheric appearance
-    float brightness = 0.75;
-    float alpha = 200;
-
-    pushMatrix();
-    translate(screenX, horizonY);
-    tint(255 * brightness, alpha);
-    imageMode(CENTER);
-    image(mushroomCloudSprite, 0, 0, spriteWidth, spriteHeight);
-    noTint();
-    imageMode(CORNER);
-    popMatrix();
-  }
 }
 
 RayHit castRay(float x, float y, float angle) {
