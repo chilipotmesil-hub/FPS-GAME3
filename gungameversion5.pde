@@ -3588,6 +3588,11 @@ void drawBeachObstacle(Player viewer, BeachObstacle obs, int w, int h) {
 void drawSailboat(Player viewer, int w, int h) {
   // Sailboat appears when looking toward the ocean (south direction)
   // Ocean is at bottom of map (high Y), so south is PI/2
+  if (sailboatSprite == null) return;
+
+  // Safety check for sprite dimensions
+  if (sailboatSprite.width <= 0 || sailboatSprite.height <= 0) return;
+
   float sailboatDirection = PI / 2; // 90 degrees (south, toward ocean)
 
   float angleDiff = sailboatDirection - viewer.angle;
@@ -3626,47 +3631,62 @@ void drawSailboat(Player viewer, int w, int h) {
 
 void drawMountains(Player viewer, int w, int h) {
   // Mountains appear on the horizon in the desert map
-  // They wrap around 360 degrees on the distant horizon
   if (mountainsSprite == null) return;
 
-  // Draw mountains as a panoramic background
-  // Cover the entire horizontal FOV
-  float spriteHeight = h * 0.25; // Mountains are 25% of screen height
+  // Safety check for sprite dimensions
+  if (mountainsSprite.width <= 0 || mountainsSprite.height <= 0) return;
+
+  // Draw mountains as a repeating/tiled panoramic background on the horizon
+  // Fixed height as percentage of screen
+  float spriteHeight = h * 0.20; // Mountains are 20% of screen height
   float spriteWidth = (mountainsSprite.width * spriteHeight) / mountainsSprite.height;
 
   // Position mountains at horizon line
-  float horizonY = h / 2 - spriteHeight;
+  float horizonY = h / 2 - spriteHeight / 2;
 
   // Faded atmospheric appearance
-  float brightness = 0.6;
-  float alpha = 150;
+  float brightness = 0.5;
+  float alpha = 120;
 
   pushMatrix();
-  translate(w/2, horizonY);
+  pushStyle();
   tint(255 * brightness, alpha);
-  imageMode(CENTER);
-  image(mountainsSprite, 0, 0, w, spriteHeight);
+  imageMode(CORNER);
+
+  // Tile the mountains across the width if needed
+  float x = -(frameCount * 0.1) % spriteWidth; // Slow pan effect
+  while (x < w) {
+    image(mountainsSprite, x, horizonY, spriteWidth, spriteHeight);
+    x += spriteWidth;
+  }
+
   noTint();
   imageMode(CORNER);
+  popStyle();
   popMatrix();
 }
 
 void drawMushroomCloud(Player viewer, int w, int h) {
   // Mushroom cloud appears on the horizon after atomic bomb detonation
+  // Positioned like sailboat - in a fixed direction on the horizon
   if (mushroomCloudSprite == null) return;
 
-  // Position cloud in a fixed direction (south)
-  float cloudDirection = PI / 2; // 90 degrees (south)
+  // Safety check for sprite dimensions
+  if (mushroomCloudSprite.width <= 0 || mushroomCloudSprite.height <= 0) return;
+
+  // Position cloud in a fixed direction (south, same as sailboat)
+  float cloudDirection = PI / 2; // 90 degrees (south, toward map edge)
 
   float angleDiff = cloudDirection - viewer.angle;
   while (angleDiff > PI) angleDiff -= TWO_PI;
   while (angleDiff < -PI) angleDiff += TWO_PI;
 
-  if (abs(angleDiff) < fov/2 + 0.5) {
+  // Only render if cloud is in view (slightly wider FOV than normal)
+  if (abs(angleDiff) < fov/2 + 0.3) {
     float screenX = w/2 + (angleDiff / (fov/2)) * (w/2);
 
-    // Large mushroom cloud on distant horizon
-    float spriteHeight = h * 0.4; // 40% of screen height
+    // Large mushroom cloud on distant horizon - fixed size
+    float spriteHeight = h * 0.35; // 35% of screen height
     float spriteWidth = (mushroomCloudSprite.width * spriteHeight) / mushroomCloudSprite.height;
 
     // Check if sprite is within viewport bounds (prevent bleed to other player's screen)
@@ -3674,12 +3694,12 @@ void drawMushroomCloud(Player viewer, int w, int h) {
       return; // Sprite would extend outside viewport
     }
 
-    // Position mushroom cloud at horizon line
-    float horizonY = h / 2 - spriteHeight / 2;
+    // Position mushroom cloud on horizon line (moved up slightly)
+    float horizonY = h / 2 - spriteHeight / 2 - spriteHeight * 0.1;
 
-    // Slightly faded appearance
-    float brightness = 0.8;
-    float alpha = 220;
+    // Slightly faded atmospheric appearance
+    float brightness = 0.75;
+    float alpha = 200;
 
     pushMatrix();
     translate(screenX, horizonY);
