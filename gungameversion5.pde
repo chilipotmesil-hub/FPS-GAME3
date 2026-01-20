@@ -651,8 +651,10 @@ void drawMapSelectScreen() {
     previewMap = mapClassicCargo;
   } else if (currentMapIndex == 1) {
     previewMap = mapForestClearing;
-  } else {
+  } else if (currentMapIndex == 2) {
     previewMap = mapSunsetBeach;
+  } else {
+    previewMap = mapDesertWasteland;
   }
 
   // Use actual map dimensions for proper rendering
@@ -670,8 +672,10 @@ void drawMapSelectScreen() {
           fill(60, 50, 40); // Warehouse floor
         } else if (currentMapIndex == 1) {
           fill(45, 70, 35); // Grass
+        } else if (currentMapIndex == 2) {
+          fill(220, 200, 160); // Beach sand
         } else {
-          fill(220, 200, 160); // Sand
+          fill(210, 180, 120); // Desert sand
         }
       } else if (cell == 5) {
         // Creek (forest only)
@@ -679,6 +683,9 @@ void drawMapSelectScreen() {
       } else if (cell == 7) {
         // Shoreline (beach only)
         fill(30, 120, 180);
+      } else if (cell == 8) {
+        // Desert border (desert only)
+        fill(190, 160, 100);
       } else if (cell == 9) {
         // Ocean/invisible barrier (beach only)
         fill(40, 130, 200);
@@ -696,10 +703,13 @@ void drawMapSelectScreen() {
           else if (cell == 2) fill(30, 80, 30); // Pine trees
           else if (cell == 3) fill(25, 70, 25); // Pine variant
           else fill(80, 60, 40); // Logs
-        } else {
+        } else if (currentMapIndex == 2) {
           // Beach colors
           if (cell == 1) fill(180, 170, 160); // Rock walls
           else fill(220, 200, 160); // Default to sand
+        } else {
+          // Desert colors
+          fill(210, 180, 120); // Default to desert sand
         }
       }
       rect(previewX + x * cellW, previewY + y * cellH, cellW + 1, cellH + 1);
@@ -718,8 +728,10 @@ void drawMapSelectScreen() {
     text("First day at your union freight yard job", width/2, previewY + previewH + 85);
   } else if (currentMapIndex == 1) {
     text("Forest clearing with pine trees, boulders, and a winding creek - you're finally awake.", width/2, previewY + previewH + 85);
-  } else {
+  } else if (currentMapIndex == 2) {
     text("Wasting away...", width/2, previewY + previewH + 85);
+  } else {
+    text("Endless desert wasteland - witness the power of the atom", width/2, previewY + previewH + 85);
   }
   
   // Navigation arrows
