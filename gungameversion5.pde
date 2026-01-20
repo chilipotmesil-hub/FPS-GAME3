@@ -588,15 +588,16 @@ void draw() {
       atomicBombFlashAlpha = 255;
       skyboxTexture = skyboxTextureFallout; // Change to fallout grey sky
 
-      // Play detonation sound
+      // Play detonation sound (louder)
       if (soundsLoaded && atomicDetonationSound != null) {
+        atomicDetonationSound.amp(0.8); // Increase volume
         atomicDetonationSound.play();
       }
     }
 
     if (atomicBombDetonated && atomicBombFlashAlpha > 0) {
-      // Fade out the white flash over 3 seconds
-      atomicBombFlashAlpha -= 255.0 / (3.0 * 60.0); // Assuming 60 FPS
+      // Fade out the white flash over 4 seconds (1 second longer)
+      atomicBombFlashAlpha -= 255.0 / (4.0 * 60.0); // Assuming 60 FPS
       if (atomicBombFlashAlpha < 0) atomicBombFlashAlpha = 0;
     }
   }
@@ -2511,6 +2512,8 @@ PImage createDesertSkyboxTexture() {
   int h = 512;
   PImage sky = createImage(w, h, RGB);
   sky.loadPixels();
+
+  // Create base sky gradient
   for (int y = 0; y < h; y++) {
     float t = (float)y / h;
     int topR = 135, topG = 206, topB = 235; // Sky blue
@@ -2522,10 +2525,39 @@ PImage createDesertSkyboxTexture() {
       sky.pixels[y * w + x] = color(r, g, b);
     }
   }
+
+  // Add distant mountains on horizon (like forest map)
+  for (int x = 0; x < w; x++) {
+    // Create mountain silhouette using layered noise
+    float mountainHeight = 0;
+
+    // Large mountain shapes
+    mountainHeight += noise(x * 0.002) * 100;
+    // Medium details
+    mountainHeight += noise(x * 0.008 + 50) * 35;
+    // Small peaks
+    mountainHeight += noise(x * 0.025 + 100) * 12;
+
+    int mountainTop = h - int(mountainHeight) - 30;
+
+    for (int y = mountainTop; y < h; y++) {
+      // Gradient from lighter (distant) to darker at base
+      float depth = (float)(y - mountainTop) / (h - mountainTop);
+      float n = noise(x * 0.015, y * 0.015);
+
+      // Brown/tan desert mountains with atmospheric haze
+      int r = int(lerp(140, 100, depth) + n * 20);
+      int g = int(lerp(120, 80, depth) + n * 15);
+      int b = int(lerp(100, 60, depth) + n * 10);
+
+      sky.pixels[y * w + x] = color(r, g, b);
+    }
+  }
+
   // Add some clouds
   for (int i = 0; i < 30; i++) {
     int cx = int(random(w));
-    int cy = int(random(h * 0.3, h * 0.7));
+    int cy = int(random(h * 0.2, h * 0.5));
     int cw = int(random(60, 120));
     int ch = int(random(20, 40));
     for (int y = max(0, cy - ch/2); y < min(h, cy + ch/2); y++) {
@@ -2544,6 +2576,7 @@ PImage createDesertSkyboxTexture() {
       }
     }
   }
+
   sky.updatePixels();
   return sky;
 }
@@ -2553,6 +2586,8 @@ PImage createFalloutSkyboxTexture() {
   int h = 512;
   PImage sky = createImage(w, h, RGB);
   sky.loadPixels();
+
+  // Create base grey sky gradient
   for (int y = 0; y < h; y++) {
     float t = (float)y / h;
     int topR = 100, topG = 100, topB = 100; // Grey
@@ -2564,6 +2599,29 @@ PImage createFalloutSkyboxTexture() {
       sky.pixels[y * w + x] = color(r, g, b);
     }
   }
+
+  // Add same mountains but darker for fallout atmosphere
+  for (int x = 0; x < w; x++) {
+    float mountainHeight = 0;
+    mountainHeight += noise(x * 0.002) * 100;
+    mountainHeight += noise(x * 0.008 + 50) * 35;
+    mountainHeight += noise(x * 0.025 + 100) * 12;
+
+    int mountainTop = h - int(mountainHeight) - 30;
+
+    for (int y = mountainTop; y < h; y++) {
+      float depth = (float)(y - mountainTop) / (h - mountainTop);
+      float n = noise(x * 0.015, y * 0.015);
+
+      // Darker grey mountains for fallout
+      int r = int(lerp(70, 50, depth) + n * 10);
+      int g = int(lerp(70, 50, depth) + n * 10);
+      int b = int(lerp(70, 50, depth) + n * 10);
+
+      sky.pixels[y * w + x] = color(r, g, b);
+    }
+  }
+
   sky.updatePixels();
   return sky;
 }
@@ -2999,14 +3057,9 @@ void renderPlayer(Player p, int startX, int startY, int w, int h) {
     spritesToRender.add(new SpriteDepth(maxDepth * 10, "sailboat", p));
   }
 
-  // Add mountains (desert map only) - render far behind everything
-  if (currentMapIndex == 3) {
-    spritesToRender.add(new SpriteDepth(maxDepth * 15, "mountains", p));
-  }
-
-  // Add mushroom cloud (desert map only, after detonation) - render in front of mountains
+  // Add mushroom cloud (desert map only, after detonation) - render far behind walls like sailboat
   if (currentMapIndex == 3 && atomicBombDetonated) {
-    spritesToRender.add(new SpriteDepth(maxDepth * 12, "mushroomcloud", p));
+    spritesToRender.add(new SpriteDepth(maxDepth * 10, "mushroomcloud", p));
   }
 
   // Sort sprites by distance (farthest first) and render
@@ -3048,8 +3101,6 @@ void renderPlayer(Player p, int startX, int startY, int w, int h) {
       }
     } else if (sd.type.equals("sailboat")) {
       drawSailboat((Player)sd.data, w, h);
-    } else if (sd.type.equals("mountains")) {
-      drawMountains((Player)sd.data, w, h);
     } else if (sd.type.equals("mushroomcloud")) {
       drawMushroomCloud((Player)sd.data, w, h);
     }
