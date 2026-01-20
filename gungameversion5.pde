@@ -14,8 +14,12 @@ boolean useArduino = false;
 
 // Sound effects
 SoundFile shootSound;
-SoundFile hitSound;
-SoundFile deathSound;
+SoundFile player1HitSound1;
+SoundFile player1HitSound2;
+SoundFile player2HitSound1;
+SoundFile player2HitSound2;
+SoundFile player1DeathSound;
+SoundFile player2DeathSound;
 SoundFile shotgunSound;
 SoundFile rifleSound;
 SoundFile shotgunPickupSound;
@@ -658,7 +662,17 @@ void drawEndScreen() {
   if (timeSinceEnd >= gunfireTime) {
     if (timeSinceEnd >= gunfireTime && timeSinceEnd < gunfireTime + 100) {
       if (soundsLoaded && shootSound != null) shootSound.play();
-      if (soundsLoaded && deathSound != null) deathSound.play();
+
+      // Play loser's death sound
+      if (soundsLoaded) {
+        Player loser = (winner == player1) ? player2 : player1;
+        if (loser == player1 && player1DeathSound != null) {
+          player1DeathSound.play();
+        } else if (loser == player2 && player2DeathSound != null) {
+          player2DeathSound.play();
+        }
+      }
+
       if (musicLoaded && menuMusic != null && !menuMusic.isPlaying()) {
         try { menuMusic.amp(0.3); } catch (Exception e) {}
         menuMusic.loop();
@@ -844,8 +858,12 @@ void loadSounds() {
   println("=== LOADING SOUND EFFECTS ===");
   try {
     shootSound = loadSoundSafe("shoot.wav");
-    hitSound = loadSoundSafe("hit.wav");
-    deathSound = loadSoundSafe("death.wav");
+    player1HitSound1 = loadSoundSafe("player1_hit1.wav");
+    player1HitSound2 = loadSoundSafe("player1_hit2.wav");
+    player2HitSound1 = loadSoundSafe("player2_hit1.wav");
+    player2HitSound2 = loadSoundSafe("player2_hit2.wav");
+    player1DeathSound = loadSoundSafe("player1_death.wav");
+    player2DeathSound = loadSoundSafe("player2_death.wav");
     shotgunSound = loadSoundSafe("shotgun.wav");
     rifleSound = loadSoundSafe("rifle.wav");
     shotgunPickupSound = loadSoundSafe("shotgun_pickup.wav");
@@ -853,8 +871,10 @@ void loadSounds() {
     healthPickupSound = loadSoundSafe("health_pickup.wav");
     emptyGunSound = loadSoundSafe("empty_gun.wav");
     reloadSound = loadSoundSafe("reload.wav");
-    if (shootSound != null || hitSound != null || deathSound != null || 
-        shotgunSound != null || rifleSound != null || 
+    if (shootSound != null || player1HitSound1 != null || player1HitSound2 != null ||
+        player2HitSound1 != null || player2HitSound2 != null ||
+        player1DeathSound != null || player2DeathSound != null ||
+        shotgunSound != null || rifleSound != null ||
         shotgunPickupSound != null || riflePickupSound != null ||
         healthPickupSound != null || emptyGunSound != null || reloadSound != null) {
       soundsLoaded = true;
@@ -3124,11 +3144,36 @@ void checkPlayerHits() {
         b.dead = true;
         spawnBloodSpray(target.x, target.y, b.angle, int(random(8, 15)));
         b.owner.lastHitMarker = millis();
-        if (soundsLoaded && hitSound != null) hitSound.play();
+
+        // Play random player-specific hit sound
+        if (soundsLoaded) {
+          if (target == player1) {
+            if (random(1) < 0.5 && player1HitSound1 != null) {
+              player1HitSound1.play();
+            } else if (player1HitSound2 != null) {
+              player1HitSound2.play();
+            }
+          } else {
+            if (random(1) < 0.5 && player2HitSound1 != null) {
+              player2HitSound1.play();
+            } else if (player2HitSound2 != null) {
+              player2HitSound2.play();
+            }
+          }
+        }
+
         if (target.health <= 0) {
           b.owner.kills++;
           spawnBloodPool(target.x, target.y);
-          if (soundsLoaded && deathSound != null) deathSound.play();
+
+          // Play player-specific death sound
+          if (soundsLoaded) {
+            if (target == player1 && player1DeathSound != null) {
+              player1DeathSound.play();
+            } else if (target == player2 && player2DeathSound != null) {
+              player2DeathSound.play();
+            }
+          }
         }
       }
     }
